@@ -1,2 +1,4 @@
-tsc introduction.ts;
-node introduction.js;
+filename="basicType"
+
+tsc "${filename}.ts";
+node "${filename}.js";
