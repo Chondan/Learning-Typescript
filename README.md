@@ -5,3 +5,4 @@
 - any
 - rest parameters
 - '--noImplicitThis' flag
+- '--strictNullChecks' flag
