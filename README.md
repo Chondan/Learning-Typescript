@@ -4,3 +4,4 @@
 - 'declare' keyword
 - any
 - rest parameters
+- '--noImplicitThis' flag
