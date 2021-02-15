@@ -1,4 +1,4 @@
-filename="unionAndIntersectionTypes"
+filename="classes"
 
-tsc "${filename}.ts";
+tsc --target ES2016 "${filename}.ts";
 node "${filename}.js";
