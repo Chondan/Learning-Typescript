@@ -1,4 +1,5 @@
-filename="enums"
+directory="Handbook"
+filename="generics"
 
-tsc --target ES2016 "${filename}.ts";
-node "${filename}.js";
+tsc --target ES2016 "./${directory}/${filename}.ts";
+node "./${directory}/${filename}.js";
