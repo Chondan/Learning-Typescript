@@ -1,6 +1,6 @@
-import { add } from '../libs/add/index';
+import * as lib from '../libs/add/index';
 
-const sum = add(10, 15);
+const sum = lib.add(10, 10);
 console.log(sum);
 
 // ----- Advanced Types -----
@@ -272,3 +272,222 @@ function getProperty<T, K extends keyof T>(o: T, k: K): T[K] {
 console.log(getProperty(taxi, "model"));
 
 // ----- Index types and index signatures -----
+// An index signature parameter type must be 'string' or 'number'. 
+// If you have a type with a string index signature, 'keyof T' will be 'string | number'.
+interface Dictionary<T> {
+	[key: string]: T;
+}
+let keys: keyof Dictionary<number>;
+let value: Dictionary<number>["foo"] = 10;
+console.log(value);
+// If you have a type with a number index signature, 'keyof T' will just be 'number'.
+interface Dictionary2<T> {
+	[key: number]: T;
+}
+let keys2: keyof Dictionary2<number>;
+let numberValue: Dictionary<string>[42] = "42";
+console.log(numberValue);
+
+// ----- Mapped types -----
+// A common task is to take an existing type and make each of its properties optional.
+interface PersonSubset {
+	name?: string;
+	age?: number;
+}
+// Or we might want a readonly version.
+interface PersonReadonly {
+	readonly name: string;
+	readonly age: number;
+}
+// This happens often enough in JavaScript that TypeScript provides a way to create new types based 
+// on old types - 'mapped types'.
+// In a mapped type, the new type transform each property in the old type in the same way.
+type Partial<T> = {
+	[P in keyof T]?: T[P];
+}
+type Readonly<T> = {
+	readonly [P in keyof T]: T[P];
+}
+type Person2 = {
+	name: string;
+	age: number;
+}
+type PartialPerson2 = Partial<Person2>;
+type ReadonlyPerson2 = Readonly<Person2>;
+// Note that this syntax describe a type rather than a member.
+// If you want to add members, you can use an intersection type.
+type PartialWithNewMember<T> = {
+	[P in keyof T]?: T[P];
+} & { newMember: boolean };
+
+// Let's take a look at the simplest mapped type and its parts. 
+type Keys = "option1" | "option2";
+type Flags = { [K in Keys]: boolean };
+
+// Here's one more example, in which 'T[P]' is wrapped in a 'Proxy<T>' class.
+type Proxy<T> = {
+  get(): T;
+  set(value: T): void;
+};
+type Proxify<T> = {
+  [P in keyof T]: Proxy<T[P]>;
+};
+function proxify<T>(o: T): Proxify<T> {
+	const obj = {} as Proxify<T>;
+	const src = o as {};
+	const copy = {...o};
+	for (const prop in src) {
+		obj[prop] = {
+			get: () => copy[prop],
+			set: (value) => {
+				copy[prop] = value;
+			}
+		}
+	}
+	return obj;
+}
+const props = { rooms: 4 };
+const proxyProps = proxify(props);
+proxyProps.rooms.set(10);
+console.log(proxyProps, proxyProps.rooms.get());
+
+// Note that 'Readonly<T> and 'Partial<T> are so useful, they are included in TypeScript's standard 
+// library along with 'Pick' and 'Record'.
+type Pick<T, K extends keyof T> = {
+	[P in K]: T[P];
+}
+type Record<K extends keyof any, T> = {
+	[P in K]: T;
+}
+type ThreeStringProps = Record<"prop1" | "prop2" | "prop3", string>;
+
+// ----- Inference from mapped types -----
+// Not that you know how to wrap the properties of a type, the next thing you'll want 
+// to do is unwrap them.
+function unproxify<T>(t: Proxify<T>): T {
+	let result = {} as T;
+	for (const k in t) {
+		result[k] = t[k].get();
+	}
+	return result;
+}
+const originalProps = unproxify(proxyProps);
+console.log(originalProps);
+// Note that this unwrapping inference only works on homomorphic mapped types.
+
+// ----- Conditional Types -----
+// A conditional type selects one of two possible types based on a condition expressed as a type 
+// relationship test.
+function f4<T extends boolean>(x: T): T extends true ? string : number {
+	return;
+}
+const x = f4(Math.random() < 0.5);
+
+// Another example would be the 'TypeName' type alias, which uses nested conditional types.
+type TypeName<T> = T extends string 
+	? "string"
+	: T extends boolean
+	? "boolean"
+	: T extends number
+	? "number"
+	: T extends undefined
+	? "undefined"
+	: T extends Function
+	? "function"
+	: "object";
+
+type T0 = TypeName<string>;
+const str: T0 = "string";
+
+// But as an example of a place where conditaional types are deferred - where they stick around 
+// instead of picking a branch - would be in the following.
+interface Foo {
+	propA: boolean;
+	propB: boolean;
+}
+function f5<T>(x: T): T extends Foo ? string : number {
+	return;
+}
+function foo<U>(x: U) {
+	let a = f5(x);
+	let b: string | number = a;
+}
+
+// ----- Distributive conditional types -----
+// Conditional types in which the checked type is a naked type parameter are called 'distributive conditional types'.
+type T5 = TypeName<string | (() => void)>;
+
+type BoxedValue<T> = { value: T };
+type BoxedArray<T> = { array: T[] };
+type Boxed<T> = T extends any[] ? BoxedArray<T[number]> : BoxedValue<T>;
+
+type T6 = Boxed<string>;
+type T7 = Boxed<number[]>;
+
+// The distributive property of conditional types can conveniently be used to filter union types.
+type Diff<T, U> = T extends U ? never : T;
+type Filter<T, U> = T extends U ? T : never;
+
+// Remove null and undefined from T
+type NotNullable<T> = Diff<T, null | undefined>;
+
+// Conditional types are particularly useful when combined with mapped types.
+type FunctionPropertyNames<T> = {
+	[K in keyof T]: T[K] extends Function ? K : never;
+}[keyof T];
+type FunctionProperties<T> = Pick<T, FunctionPropertyNames<T>>;
+
+type NonFunctionPropertyNames<T> = {
+	[K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+type NonFunctionProperties<T> = Pick<T, NonFunctionPropertyNames<T>>;
+
+interface Part {
+	id: number;
+	name: string;
+	subparts: Part[];
+	updatePart(newName: string): void;
+}
+
+type T8 = FunctionPropertyNames<Part>;
+type T9 = NonFunctionPropertyNames<Part>;
+// Note, conditional tyeps are not permitted to reference themselves recursively.
+
+// ----- Type inference in conditional types -----
+// Within the 'extends' clause of a conditional type, it is now possible to have 'infer' 
+// declarations that introduce a type variable to be inferred.
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
+// Conditional types can be nested to form a sequence of pattern matches that are evaluated in order.
+type Unpacked<T> = T extends (infer U)[]
+	? U
+	: T extends (...args: any[]) => infer U
+	? U
+	: T extends Promise<infer U>
+	? U
+	: T;
+
+type T10 = Unpacked<Unpacked<Promise<number>[]>>;
+type T11 = Unpacked<Promise<string>[]>;
+
+// The following example demonstrates how multiple candidates for the same type variable 
+// in co-variant positions causes a union type to be inferred.
+type Foo2<T> = T extends { a: infer U; b: infer U } ? U : never;
+type T12 = Foo2<{ a: string; b: string }>;
+type T13 = Foo2<{ a: string; b: number }>;
+
+// Likewise, multiple candidates for the same type variable in contra-variant positions causes 
+// an intersection type to be inferred.
+type Bar<T> = T extends { a: (x: infer U) => void; b: (x: infer U) => void}
+	? U
+	: never;
+
+type T14 = Bar<{ a: (x: string) => void; b: (x: number) => void }>;
+
+// When inferring from a type with multiple call signatures (such as the type of an overloaed function), 
+// inferences are made from the last signature (which, presumably, is the most permissive catch-all case).
+
+// It is not possible to use 'infer' declarations in constraint clauses for regular type parameters.
+// However, much the same effect can be obtained by erasing the type variables in the constraint and 
+// instead specifying a conditional type.
+type AnyFunction = (...args: any[]) => any;
+type ReturnType2<T extends AnyFunction> = T extends (...args: any[]) => infer R ? R : any;
