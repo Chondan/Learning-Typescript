@@ -1,3 +1,5 @@
+import { multiply } from './utils/util';
+
 declare function add(a: number, b: number): number;
 declare type Player = { name: string };
 declare  function greet(person: { name: string }): string;
@@ -6,4 +8,4 @@ declare namespace me {
 	let age: number;
 }
 
-export { add, greet, Player, me };
+export { add, greet, Player, me, multiply };

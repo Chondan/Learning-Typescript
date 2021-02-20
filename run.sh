@@ -1,8 +1,6 @@
 directory="HandbookReference"
-filename="utilityTypes"
-flag="--strictNullChecks"
+filename="decorators"
+flag="--target ES5 --experimentalDecorators --emitDecoratorMetadata"
 
-option="--target ES2016"
-
-tsc "${flag}" "./${directory}/${filename}.ts";
+tsc ${flag} "./${directory}/${filename}.ts";
 node "./${directory}/${filename}.js";
