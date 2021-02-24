@@ -18,3 +18,6 @@
 	- `writable` -> specifies that the value of a property can be changed.
 	- `value` -> contains the actual value of property.
 - `reflect-metadata` -> https://www.npmjs.com/package/reflect-metadata
+- Object
+	- `Object.getOwnPropertyNames()` -> returns an array of all properties (including non-enumerable properties except for those which use Symbol) found directly in a given object.
+	- `Object.getOwnPropertyDescriptor()` -> returns an object describing the configuration of a specific property on a given object.

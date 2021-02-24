@@ -1,5 +1,5 @@
 directory="HandbookReference"
-filename="iteratorsAndGenerators"
+filename="mixins"
 flag="--target ES5 --experimentalDecorators --emitDecoratorMetadata"
 
 tsc ${flag} "./${directory}/${filename}.ts";
