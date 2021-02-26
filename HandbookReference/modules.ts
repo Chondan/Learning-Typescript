@@ -23,3 +23,8 @@ console.log(evens);
 // ----- Wildcard module declarations -----
 // Some module loaders such as 'SystemJS' and 'AMD' allow non-JavaScript content to be imported.
 // These typically use a prefix or suffix to indicate the special loading semantics.
+
+// ----- Guidance for structuring modules -----
+// --- Export as close to top-level as possible ---
+// Consumers of your module should have as little friction as possible when using things that 
+// you export.
